@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>Refeições</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h1 { color: #333; }
+    input, select, button { margin: 5px 0; padding: 5px; }
+    ul { list-style: none; padding: 0; }
+    li { margin: 5px 0; padding: 5px; background: #f0f0f0; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <h1>Minhas Refeições</h1>
+
+  <label>Dia: <input type="date" id="day"></label><br>
+  <label>Refeição: <input type="text" id="mealName" placeholder="Ex: Almoço"></label><br>
+  <label>Prioridade: 
+    <select id="priority">
+      <option value="Baixa">Baixa</option>
+      <option value="Média">Média</option>
+      <option value="Alta">Alta</option>
+    </select>
+  </label><br>
+  <button onclick="addMeal()">Adicionar</button>
+
+  <h2>Lista de Refeições</h2>
+  <ul id="mealsList"></ul>
+
+  <script>
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyrRXw06uSb6JLpC9svuLOWStNO5KugSFxuSCLu9BVlIPZoDXdZInYBIIzmxHHGobCL9Q/exec';
+
+    async function fetchMeals() {
+      try {
+        const res = await fetch(SCRIPT_URL);
+        const data = await res.json();
+        const list = document.getElementById('mealsList');
+        list.innerHTML = '';
+        data.forEach(item => {
+          const li = document.createElement('li');
+          li.textContent = `${item.day} - ${item.name} [${item.priority}]`;
+          list.appendChild(li);
+        });
+      } catch (err) {
+        alert('⚠️ Não foi possível carregar os dados. Verifique o Google Sheets.');
+      }
+    }
+
+    async function addMeal() {
+      const day = document.getElementById('day').value;
+      const name = document.getElementById('mealName').value;
+      const priority = document.getElementById('priority').value;
+
+      if (!day || !name) {
+        alert('Preencha todos os campos!');
+        return;
+      }
+
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          body: JSON.stringify({ day, tasks: [{ name, priority }] }),
+          headers: { 'Content-Type': 'application/json' }
+        });
+        const result = await res.json();
+        if (result.status === 'ok') {
+          document.getElementById('mealName').value = '';
+          fetchMeals();
+        }
+      } catch (err) {
+        alert('⚠️ Não foi possível salvar no Google Sheets. Usando LocalStorage.');
+        const localData = JSON.parse(localStorage.getItem('meals') || '[]');
+        localData.push({ day, name, priority });
+        localStorage.setItem('meals', JSON.stringify(localData));
+        fetchLocalMeals();
+      }
+    }
+
+    function fetchLocalMeals() {
+      const localData = JSON.parse(localStorage.getItem('meals') || '[]');
+      const list = document.getElementById('mealsList');
+      list.innerHTML = '';
+      localData.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = `${item.day} - ${item.name} [${item.priority}]`;
+        list.appendChild(li);
+      });
+    }
+
+    // Carrega ao abrir
+    fetchMeals().catch(fetchLocalMeals);
+  </script>
+</body>
+</html>
