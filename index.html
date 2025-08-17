@@ -2,25 +2,31 @@
 <html lang="pt">
 <head>
   <meta charset="UTF-8">
-  <title>Gráfico Dinâmico 2025</title>
+  <title>Investimentos Mensais 2026</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tabletop@1.6.0/src/tabletop.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    canvas { max-width: 1000px; margin: auto; display: block; }
+  </style>
 </head>
 <body>
-  <h2>Investimentos Mensais 2025 (Google Sheets)</h2>
+  <h1>Investimentos Mensais 2025</h1>
   <canvas id="myChart" width="800" height="400"></canvas>
 
   <script>
-    // URL do Google Sheets publicado (pubhtml)
+    // Link PubHTML da sua planilha Google Sheets
     const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRyBCKIqCRwswkUQP_or3WI1dOG3JyQGyousdaS_6w_lTyRjJSXXnl5PeMW5jq2lQ/pubhtml";
 
+    // Função para gerar cores aleatórias
     function getRandomColor() {
-      const r = Math.floor(Math.random() * 255);
-      const g = Math.floor(Math.random() * 255);
-      const b = Math.floor(Math.random() * 255);
-      return `rgba(${r}, ${g}, ${b}, 1)`;
+      const r = Math.floor(Math.random() * 200);
+      const g = Math.floor(Math.random() * 200);
+      const b = Math.floor(Math.random() * 200);
+      return `rgba(${r},${g},${b},1)`;
     }
 
+    // Cria gráfico com Chart.js
     function createChart(meses, datasets) {
       const ctx = document.getElementById('myChart').getContext('2d');
       new Chart(ctx, {
@@ -37,14 +43,19 @@
       });
     }
 
-    // Pega os dados do Google Sheets usando Tabletop.js
+    // Pega dados da planilha via Tabletop.js
     window.onload = function() {
       Tabletop.init({
         key: sheetURL,
         simpleSheet: true,
         callback: function(data) {
+          if (!data || data.length === 0) {
+            alert("Erro: não foi possível carregar os dados da planilha.");
+            return;
+          }
+
           const meses = [];
-          const colunas = Object.keys(data[0]).filter(k => k !== "TRADE REPUBLIC 2025"); // Ajuste conforme cabeçalho
+          const colunas = Object.keys(data[0]).filter(k => k !== "TRADE REPUBLIC 2025");
           const datasets = colunas.map(col => ({
             label: col,
             data: [],
@@ -54,10 +65,10 @@
           }));
 
           data.forEach(row => {
-            meses.push(row["TRADE REPUBLIC 2025"]); // coluna dos meses
+            meses.push(row["TRADE REPUBLIC 2025"]);
             colunas.forEach((col, i) => {
-              // remove € e espaços e converte para número
-              const num = parseFloat(row[col].replace("€","").replace(/\s/g,"").replace(",", ".")) || 0;
+              const valor = row[col] || "0";
+              const num = parseFloat(valor.replace("€","").replace(/\s/g,"").replace(",", ".")) || 0;
               datasets[i].data.push(num);
             });
           });
@@ -65,7 +76,7 @@
           createChart(meses, datasets);
         }
       });
-    }
+    };
   </script>
 </body>
 </html>
