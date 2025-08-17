@@ -1,139 +1,210 @@
 <!DOCTYPE html>
 <html lang="pt">
 <head>
-  <meta charset="UTF-8">
-  <title>Investimentos Mensais 2025</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    body { 
-      font-family: Arial, sans-serif; 
-      padding: 20px; 
-      background: #f5f5f5; 
-      text-align: center;
-    }
-    h1 { color: #333; }
-    .charts-container {
-      display: flex;
-      justify-content: center;
-      gap: 20px;
-      flex-wrap: wrap;
-      margin-top: 40px;
-    }
-    .chart-box {
-      background: #fff;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      flex: 1 1 400px;
-    }
-    canvas {
-      max-width: 100%;
-      height: 300px;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard de Poupanças 2025</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+<style>
+  body {
+    font-family: 'Inter', Arial, sans-serif;
+    margin: 20px;
+    background: #f0f2f5;
+    color: #333;
+  }
+  h1 { font-weight: 700; text-align: center; margin-bottom: 30px; }
+  .kpi-container {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    flex-wrap: wrap;
+  }
+  .kpi-box {
+    background: #fff;
+    padding: 20px 30px;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    min-width: 200px;
+    text-align: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .kpi-box:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 25px rgba(0,0,0,0.15);
+  }
+  .kpi-box h3 { margin: 10px 0 5px; font-weight: 600; color: #555; }
+  .kpi-box p { font-size: 1.5rem; font-weight: 700; margin: 0; color: #222; }
+  .charts-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 25px;
+    margin-top: 30px;
+  }
+  .chart-box {
+    background: #fff;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    flex: 1 1 400px;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .chart-box:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 25px rgba(0,0,0,0.15);
+  }
+  canvas { max-width: 100%; height: 350px; }
+  h2 { margin-bottom: 15px; font-weight: 600; color: #555; }
+  @media print {
+    body { margin: 0; font-size: 12pt; }
+    .chart-box, .kpi-box { box-shadow: none; }
+  }
+</style>
 </head>
 <body>
-  <h1>Investimentos Mensais 2025</h1>
 
-  <div class="charts-container">
-    <div class="chart-box">
-      <h2>Fundo ML</h2>
-      <canvas id="chartFundo"></canvas>
-    </div>
-    <div class="chart-box">
-      <h2>Férias ML</h2>
-      <canvas id="chartFerias"></canvas>
-    </div>
-    <div class="chart-box">
-      <h2>Poupança Extra Fundo ML</h2>
-      <canvas id="chartPoupanca"></canvas>
-    </div>
+<h1>Dashboard de Poupanças 2025</h1>
+
+<div class="kpi-container">
+  <div class="kpi-box">
+    <h3>Poupanças</h3>
+    <p id="totalPoupanca">0 €</p>
   </div>
+  <div class="kpi-box">
+    <h3>Férias</h3>
+    <p id="totalFerias">0 €</p>
+  </div>
+</div>
 
-  <script>
-    const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyBCKIqCRwswkUQP_or3WI1dOG3JyQGyousdaS_6w_lTyRjJSXXnl5PeMW5jq2lQ/pub?output=csv&gid=1444389821';
+<div class="charts-container">
+  <div class="chart-box">
+    <h2>Poupanças</h2>
+    <canvas id="chartPoupanca"></canvas>
+  </div>
+  <div class="chart-box">
+    <h2>Férias</h2>
+    <canvas id="chartFerias"></canvas>
+  </div>
+</div>
 
-    fetch(csvUrl)
-      .then(res => res.text())
-      .then(csv => {
-        const linhas = csv.trim().split('\n');
-        const meses = [];
-        const fundoML = [];
-        const feriasML = [];
+<script>
+const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyBCKIqCRwswkUQP_or3WI1dOG3JyQGyousdaS_6w_lTyRjJSXXnl5PeMW5jq2lQ/pub?output=csv&gid=1444389821';
 
-        linhas.slice(1).forEach(linha => {
-          const cols = linha.split(',');
-          meses.push(cols[0]);
-          fundoML.push(Number(cols[1].replace(/\s|€/g, '')) || 0);
-          feriasML.push(Number(cols[2].replace(/\s|€/g, '')) || 0);
+fetch(csvUrl)
+  .then(res => res.text())
+  .then(csv => {
+    const linhas = csv.trim().split('\n');
+    const meses = [], fundoML = [], feriasML = [], linhaReferencia = [];
+
+    linhas.slice(1).forEach((linha,i) => {
+      const cols = linha.split(',');
+      meses.push(cols[0]);
+      const fundo = Number(cols[1].replace(/\s|€/g,'') || 0);
+      const ferias = Number(cols[2].replace(/\s|€/g,'') || 0);
+      fundoML.push(fundo);
+      feriasML.push(ferias);
+
+      // Linha de referência começa em março (índice 2)
+      if(i < 2){
+        linhaReferencia.push(null);
+      } else {
+        linhaReferencia.push(fundoML[i-1] + 200);
+      }
+    });
+
+    // Atualizar KPIs (valor do último mês)
+    const totalPoupanca = fundoML[fundoML.length - 1] || 0;
+    const totalFerias = feriasML[feriasML.length - 1] || 0;
+
+    document.getElementById('totalPoupanca').textContent = totalPoupanca.toLocaleString('pt-PT') + ' €';
+    document.getElementById('totalFerias').textContent = totalFerias.toLocaleString('pt-PT') + ' €';
+
+    function createBarChart(ctx, label, data, gradientColors, referenceLine=null){
+      const grad = ctx.createLinearGradient(0,0,0,350);
+      grad.addColorStop(0, gradientColors[0]);
+      grad.addColorStop(1, gradientColors[1]);
+
+      const datasets = [{
+        label,
+        data,
+        backgroundColor: referenceLine 
+          ? data.map((v,i) => (referenceLine[i] !== null && v > referenceLine[i]) ? grad : 'rgba(255,99,132,0.5)')
+          : grad,
+        borderRadius: 12
+      }];
+
+      if(referenceLine){
+        datasets.push({
+          label: 'Linha de referência',
+          type: 'line',
+          data: referenceLine,
+          borderColor: 'rgba(0,128,0,0.9)',
+          borderWidth: 2,
+          pointRadius: 0,
+          borderDash: [5,5],
+          fill: false
         });
+      }
 
-        // Calcular poupança extra mês a mês
-        const poupancaExtra = [0]; // Janeiro não tem mês anterior
-        for(let i = 1; i < fundoML.length; i++){
-          poupancaExtra.push(fundoML[i] - fundoML[i-1]);
-        }
-
-        function createChart(ctx, label, data, color1, color2) {
-          const grad = ctx.createLinearGradient(0, 0, 0, 300);
-          grad.addColorStop(0, color1);
-          grad.addColorStop(1, color2);
-
-          return new Chart(ctx, {
-            type: 'bar',
-            data: {
-              labels: meses,
-              datasets: [{ label, data, backgroundColor: grad }]
-            },
-            options: {
-              responsive: true,
-              plugins: {
-                legend: { display: false },
-                title: { display: true, text: label },
-                tooltip: {
-                  callbacks: {
-                    label: function(context) {
-                      return context.dataset.label + ': ' + context.raw.toLocaleString('pt-PT') + ' €';
-                    }
-                  }
-                }
-              },
-              scales: {
-                y: { 
-                  beginAtZero: true,
-                  ticks: { callback: v => v.toLocaleString('pt-PT') + ' €' }
-                }
+      return new Chart(ctx, {
+        type: 'bar',
+        data: { labels: meses, datasets },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#333',
+              titleColor: '#fff',
+              bodyColor: '#fff',
+              padding: 10,
+              cornerRadius: 8,
+              callbacks: {
+                label: context => context.raw.toLocaleString('pt-PT') + ' €'
               }
+            },
+            datalabels: {
+              anchor: 'end',
+              align: 'end',
+              color: '#222',
+              font: { weight: 'bold' },
+              formatter: val => val.toLocaleString('pt-PT') + ' €'
             }
-          });
-        }
+          },
+          scales: {
+            x: { grid: { display: false } },
+            y: { 
+              beginAtZero: true,
+              grid: { display: false },
+              ticks: { callback: v => v.toLocaleString('pt-PT') + ' €' }
+            }
+          },
+          interaction: { mode: 'index', intersect: false }
+        },
+        plugins: [ChartDataLabels]
+      });
+    }
 
-        createChart(
-          document.getElementById('chartFundo').getContext('2d'),
-          'Fundo ML',
-          fundoML,
-          'rgba(255,99,132,0.8)',
-          'rgba(255,99,132,0.3)'
-        );
+    createBarChart(
+      document.getElementById('chartPoupanca').getContext('2d'),
+      'Poupanças',
+      fundoML,
+      ['rgba(0,200,0,0.85)','rgba(0,140,0,0.6)'],
+      linhaReferencia
+    );
 
-        createChart(
-          document.getElementById('chartFerias').getContext('2d'),
-          'Férias ML',
-          feriasML,
-          'rgba(54,162,235,0.8)',
-          'rgba(54,162,235,0.3)'
-        );
+    createBarChart(
+      document.getElementById('chartFerias').getContext('2d'),
+      'Férias',
+      feriasML,
+      ['rgba(54,162,235,0.85)','rgba(0,100,200,0.6)']
+    );
 
-        createChart(
-          document.getElementById('chartPoupanca').getContext('2d'),
-          'Poupança Extra Fundo ML',
-          poupancaExtra,
-          'rgba(75,192,192,0.8)',
-          'rgba(75,192,192,0.3)'
-        );
+  })
+  .catch(err => console.error('Erro ao carregar CSV:', err));
+</script>
 
-      })
-      .catch(err => console.error('Erro ao carregar CSV:', err));
-  </script>
 </body>
 </html>
+
