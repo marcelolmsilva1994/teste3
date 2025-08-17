@@ -24,7 +24,7 @@
       border-radius: 12px;
       padding: 20px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      flex: 1 1 400px; /* largura mínima 400px, expande conforme espaço */
+      flex: 1 1 400px;
     }
     canvas {
       max-width: 100%;
@@ -43,6 +43,10 @@
     <div class="chart-box">
       <h2>Férias ML</h2>
       <canvas id="chartFerias"></canvas>
+    </div>
+    <div class="chart-box">
+      <h2>Poupança Extra Fundo ML</h2>
+      <canvas id="chartPoupanca"></canvas>
     </div>
   </div>
 
@@ -64,37 +68,72 @@
           feriasML.push(Number(cols[2].replace(/\s|€/g, '')) || 0);
         });
 
-        const ctxFundo = document.getElementById('chartFundo').getContext('2d');
-        new Chart(ctxFundo, {
-          type: 'bar',
-          data: {
-            labels: meses,
-            datasets: [{ label: 'Fundo ML', data: fundoML, backgroundColor: 'rgba(255,99,132,0.7)' }]
-          },
-          options: {
-            responsive: true,
-            plugins: { legend: { display: false }, title: { display: true, text: 'Fundo ML', font: { size: 18 } } },
-            scales: { y: { beginAtZero: true, ticks: { callback: v => v.toLocaleString('pt-PT') + ' €' } } }
-          }
-        });
+        // Calcular poupança extra mês a mês
+        const poupancaExtra = [0]; // Janeiro não tem mês anterior
+        for(let i = 1; i < fundoML.length; i++){
+          poupancaExtra.push(fundoML[i] - fundoML[i-1]);
+        }
 
-        const ctxFerias = document.getElementById('chartFerias').getContext('2d');
-        new Chart(ctxFerias, {
-          type: 'bar',
-          data: {
-            labels: meses,
-            datasets: [{ label: 'Férias ML', data: feriasML, backgroundColor: 'rgba(54,162,235,0.7)' }]
-          },
-          options: {
-            responsive: true,
-            plugins: { legend: { display: false }, title: { display: true, text: 'Férias ML', font: { size: 18 } } },
-            scales: { y: { beginAtZero: true, ticks: { callback: v => v.toLocaleString('pt-PT') + ' €' } } }
-          }
-        });
+        function createChart(ctx, label, data, color1, color2) {
+          const grad = ctx.createLinearGradient(0, 0, 0, 300);
+          grad.addColorStop(0, color1);
+          grad.addColorStop(1, color2);
+
+          return new Chart(ctx, {
+            type: 'bar',
+            data: {
+              labels: meses,
+              datasets: [{ label, data, backgroundColor: grad }]
+            },
+            options: {
+              responsive: true,
+              plugins: {
+                legend: { display: false },
+                title: { display: true, text: label },
+                tooltip: {
+                  callbacks: {
+                    label: function(context) {
+                      return context.dataset.label + ': ' + context.raw.toLocaleString('pt-PT') + ' €';
+                    }
+                  }
+                }
+              },
+              scales: {
+                y: { 
+                  beginAtZero: true,
+                  ticks: { callback: v => v.toLocaleString('pt-PT') + ' €' }
+                }
+              }
+            }
+          });
+        }
+
+        createChart(
+          document.getElementById('chartFundo').getContext('2d'),
+          'Fundo ML',
+          fundoML,
+          'rgba(255,99,132,0.8)',
+          'rgba(255,99,132,0.3)'
+        );
+
+        createChart(
+          document.getElementById('chartFerias').getContext('2d'),
+          'Férias ML',
+          feriasML,
+          'rgba(54,162,235,0.8)',
+          'rgba(54,162,235,0.3)'
+        );
+
+        createChart(
+          document.getElementById('chartPoupanca').getContext('2d'),
+          'Poupança Extra Fundo ML',
+          poupancaExtra,
+          'rgba(75,192,192,0.8)',
+          'rgba(75,192,192,0.3)'
+        );
 
       })
       .catch(err => console.error('Erro ao carregar CSV:', err));
   </script>
 </body>
 </html>
-
