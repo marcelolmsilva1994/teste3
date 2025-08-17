@@ -4,18 +4,18 @@
   <meta charset="UTF-8">
   <title>Investimentos Mensais 2025</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/tabletop@1.6.0/src/tabletop.js"></script>
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; }
     canvas { max-width: 1000px; margin: auto; display: block; }
   </style>
 </head>
 <body>
-  <h1>Teste1</h1>
+  <h1>Investimentos Mensais 2025</h1>
   <canvas id="myChart" width="800" height="400"></canvas>
 
   <script>
-    const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRyBCKIqCRwswkUQP_or3WI1dOG3JyQGyousdaS_6w_lTyRjJSXXnl5PeMW5jq2lQ/pubhtml";
+    // Link da planilha publicado como CSV
+    const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRyBCKIqCRwswkUQP_or3WI1dOG3JyQGyousdaS_6w_lTyRjJSXXnl5PeMW5jq2lQ/pub?output=csv&gid=1444389821";
 
     function getRandomColor() {
       const r = Math.floor(Math.random() * 200);
@@ -40,30 +40,39 @@
       });
     }
 
-    window.onload = function() {
-      Tabletop.init({
-        key: sheetURL,
-        simpleSheet: true,
-        callback: function(data) {
-          if (!data || data.length === 0) {
-            alert("Erro: não foi possível carregar os dados da planilha.");
-            return;
-          }
+    fetch(sheetURL)
+      .then(res => res.text())
+      .then(csvText => {
+        const linhas = csvText.trim().split("\n");
+        const headers = linhas[0].split(",");
+        const meses = [];
+        const datasetsMap = {};
 
-          const meses = [];
-          const colunas = Object.keys(data[0]).filter(k => k !== "TRADE REPUBLIC 2025");
-          const datasets = colunas.map(col => ({
-            label: col,
-            data: [],
-            borderColor: getRandomColor(),
-            backgroundColor: "rgba(0,0,0,0.05)",
-            tension: 0.3
-          }));
+        // Inicializar datasets
+        headers.slice(1).forEach(h => datasetsMap[h] = []);
 
-          data.forEach(row => {
-            meses.push(row["TRADE REPUBLIC 2025"]);
-            colunas.forEach((col, i) => {
-              const valor = row[col] || "0";
-              const num = parseFloat(valor.replace("€","").replace(/\s/g,"").replace(",", ".")) || 0;
+        // Preencher dados
+        linhas.slice(1).forEach(linha => {
+          const cols = linha.split(",");
+          meses.push(cols[0]);
+          cols.slice(1).forEach((v, i) => {
+            const num = parseFloat(v.replace("€","").replace(/\s/g,"").replace(",", ".")) || 0;
+            datasetsMap[headers[i+1]].push(num);
+          });
+        });
 
+        const datasets = Object.keys(datasetsMap).map(col => ({
+          label: col,
+          data: datasetsMap[col],
+          borderColor: getRandomColor(),
+          backgroundColor: "rgba(0,0,0,0.05)",
+          tension: 0.3
+        }));
+
+        createChart(meses, datasets);
+      })
+      .catch(err => console.error("Erro ao carregar CSV:", err));
+  </script>
+</body>
+</html>
 
