@@ -2,42 +2,70 @@
 <html lang="pt">
 <head>
   <meta charset="UTF-8">
-  <title>Refeições</title>
+  <title>Gráfico Dinâmico 2025</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tabletop@1.6.0/src/tabletop.js"></script>
 </head>
 <body>
-  <h1>Lista de Tarefas</h1>
-  <ul id="tarefas"></ul>
+  <h2>Investimentos Mensais 2025 (Google Sheets)</h2>
+  <canvas id="myChart" width="800" height="400"></canvas>
 
   <script>
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyrRXw06uSb6JLpC9svuLOWStNO5KugSFxuSCLu9BVlIPZoDXdZInYBIIzmxHHGobCL9Q/exec';
+    // URL do Google Sheets publicado (pubhtml)
+    const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRyBCKIqCRwswkUQP_or3WI1dOG3JyQGyousdaS_6w_lTyRjJSXXnl5PeMW5jq2lQ/pubhtml";
 
-    // Obter tarefas do Google Sheets
-    async function carregarTarefas() {
-      try {
-        const response = await fetch(WEB_APP_URL);
-        if (!response.ok) throw new Error('Erro ao buscar dados');
-        const tasks = await response.json();
-        const lista = document.getElementById('tarefas');
-        lista.innerHTML = '';
-        tasks.forEach(t => {
-          const li = document.createElement('li');
-          li.textContent = `${t.day} - ${t.name} (${t.priority})`;
-          lista.appendChild(li);
-        });
-      } catch (err) {
-        console.warn('⚠️ Não foi possível salvar no Google Sheets. Usando LocalStorage.');
-        const tasks = JSON.parse(localStorage.getItem('tarefas') || '[]');
-        const lista = document.getElementById('tarefas');
-        lista.innerHTML = '';
-        tasks.forEach(t => {
-          const li = document.createElement('li');
-          li.textContent = `${t.day} - ${t.name} (${t.priority})`;
-          lista.appendChild(li);
-        });
-      }
+    function getRandomColor() {
+      const r = Math.floor(Math.random() * 255);
+      const g = Math.floor(Math.random() * 255);
+      const b = Math.floor(Math.random() * 255);
+      return `rgba(${r}, ${g}, ${b}, 1)`;
     }
 
-    carregarTarefas();
+    function createChart(meses, datasets) {
+      const ctx = document.getElementById('myChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'line',
+        data: { labels: meses, datasets: datasets },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: 'top' },
+            title: { display: true, text: 'Investimentos Mensais 2025' }
+          },
+          scales: { y: { beginAtZero: true } }
+        }
+      });
+    }
+
+    // Pega os dados do Google Sheets usando Tabletop.js
+    window.onload = function() {
+      Tabletop.init({
+        key: sheetURL,
+        simpleSheet: true,
+        callback: function(data) {
+          const meses = [];
+          const colunas = Object.keys(data[0]).filter(k => k !== "TRADE REPUBLIC 2025"); // Ajuste conforme cabeçalho
+          const datasets = colunas.map(col => ({
+            label: col,
+            data: [],
+            borderColor: getRandomColor(),
+            backgroundColor: "rgba(0,0,0,0.05)",
+            tension: 0.3
+          }));
+
+          data.forEach(row => {
+            meses.push(row["TRADE REPUBLIC 2025"]); // coluna dos meses
+            colunas.forEach((col, i) => {
+              // remove € e espaços e converte para número
+              const num = parseFloat(row[col].replace("€","").replace(/\s/g,"").replace(",", ".")) || 0;
+              datasets[i].data.push(num);
+            });
+          });
+
+          createChart(meses, datasets);
+        }
+      });
+    }
   </script>
 </body>
 </html>
