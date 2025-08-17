@@ -14,7 +14,6 @@
   <canvas id="myChart" width="800" height="400"></canvas>
 
   <script>
-    // Link da planilha publicado como CSV
     const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRyBCKIqCRwswkUQP_or3WI1dOG3JyQGyousdaS_6w_lTyRjJSXXnl5PeMW5jq2lQ/pub?output=csv&gid=1444389821";
 
     function getRandomColor() {
@@ -44,6 +43,8 @@
       .then(res => res.text())
       .then(csvText => {
         const linhas = csvText.trim().split("\n");
+        if (linhas.length < 2) throw new Error("CSV não tem dados suficientes");
+
         const headers = linhas[0].split(",");
         const meses = [];
         const datasetsMap = {};
@@ -51,13 +52,16 @@
         // Inicializar datasets
         headers.slice(1).forEach(h => datasetsMap[h] = []);
 
-        // Preencher dados
+        // Preencher dados, ignorando linhas vazias ou incompletas
         linhas.slice(1).forEach(linha => {
           const cols = linha.split(",");
+          if (cols.length < headers.length) return; // ignora linhas incompletas
           meses.push(cols[0]);
           cols.slice(1).forEach((v, i) => {
+            const key = headers[i+1];
+            if (!datasetsMap[key]) datasetsMap[key] = [];
             const num = parseFloat(v.replace("€","").replace(/\s/g,"").replace(",", ".")) || 0;
-            datasetsMap[headers[i+1]].push(num);
+            datasetsMap[key].push(num);
           });
         });
 
@@ -75,4 +79,5 @@
   </script>
 </body>
 </html>
+
 
