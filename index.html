@@ -14,31 +14,46 @@
   <canvas id="myChart"></canvas>
 
   <script>
-    const meses = ["JANEIRO", "FEVEREIRO", "MARÇO", "ABRIL", "MAIO", "JUNHO", "JULHO", "AGOSTO"];
-    const fundoML = [0, 3459, 3659, 3859, 4059, 4444, 4644, 4844];
-    const feriasML = [647, 288, 161, 361, 270, 470, 350, 550];
+    // Link CSV do Google Sheets publicado
+    const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyBCKIqCRwswkUQP_or3WI1dOG3JyQGyousdaS_6w_lTyRjJSXXnl5PeMW5jq2lQ/pub?output=csv&gid=1444389821';
 
-    const ctx = document.getElementById('myChart').getContext('2d');
-    new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: meses,
-        datasets: [
-          { label: 'Fundo ML', data: fundoML, backgroundColor: 'rgba(255,99,132,0.7)' },
-          { label: 'Férias ML', data: feriasML, backgroundColor: 'rgba(54,162,235,0.7)' }
-        ]
-      },
-      options: {
-        responsive: true,
-        plugins: { legend: { position: 'top' }, title: { display: true, text: 'Investimentos Mensais 2025' } },
-        scales: { y: { beginAtZero: true } },
-        interaction: { mode: 'index', intersect: false },
-        stacked: true
-      }
-    });
+    fetch(csvUrl)
+      .then(res => res.text())
+      .then(csv => {
+        const linhas = csv.trim().split('\n');
+        const meses = [];
+        const fundoML = [];
+        const feriasML = [];
+
+        linhas.slice(1).forEach(linha => {
+          const cols = linha.split(',');
+          meses.push(cols[0]);
+          fundoML.push(Number(cols[1]) || 0);
+          feriasML.push(Number(cols[2]) || 0);
+        });
+
+        const ctx = document.getElementById('myChart').getContext('2d');
+        new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: meses,
+            datasets: [
+              { label: 'Fundo ML', data: fundoML, backgroundColor: 'rgba(255,99,132,0.7)' },
+              { label: 'Férias ML', data: feriasML, backgroundColor: 'rgba(54,162,235,0.7)' }
+            ]
+          },
+          options: {
+            responsive: true,
+            plugins: { legend: { position: 'top' }, title: { display: true, text: 'Investimentos Mensais 2025' } },
+            scales: { y: { beginAtZero: true } },
+            interaction: { mode: 'index', intersect: false },
+            stacked: true
+          }
+        });
+      })
+      .catch(err => console.error('Erro ao carregar CSV:', err));
   </script>
 </body>
 </html>
-
 
 
