@@ -6,76 +6,51 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; }
-    canvas { max-width: 1000px; margin: auto; display: block; }
+    canvas { max-width: 900px; margin: auto; display: block; }
   </style>
 </head>
 <body>
   <h1>Investimentos Mensais 2025</h1>
-  <canvas id="myChart" width="800" height="400"></canvas>
+  <canvas id="myChart"></canvas>
 
   <script>
-    const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRyBCKIqCRwswkUQP_or3WI1dOG3JyQGyousdaS_6w_lTyRjJSXXnl5PeMW5jq2lQ/pub?output=csv&gid=1444389821";
+    const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRyBCKIqCRwswkUQP_or3WI1dOG3JyQGyousdaS_6w_lTyRjJSXXnl5PeMW5jq2lQ/pub?output=csv&gid=1444389821';
 
-    function getRandomColor() {
-      const r = Math.floor(Math.random() * 200);
-      const g = Math.floor(Math.random() * 200);
-      const b = Math.floor(Math.random() * 200);
-      return `rgba(${r},${g},${b},1)`;
-    }
-
-    function createChart(meses, datasets) {
-      const ctx = document.getElementById('myChart').getContext('2d');
-      new Chart(ctx, {
-        type: 'line',
-        data: { labels: meses, datasets: datasets },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { position: 'top' },
-            title: { display: true, text: 'Investimentos Mensais 2025' }
-          },
-          scales: { y: { beginAtZero: true } }
-        }
-      });
-    }
-
-    fetch(sheetURL)
+    fetch(csvUrl)
       .then(res => res.text())
-      .then(csvText => {
-        const linhas = csvText.trim().split("\n");
-        if (linhas.length < 2) throw new Error("CSV não tem dados suficientes");
-
-        const headers = linhas[0].split(",");
+      .then(csv => {
+        const linhas = csv.trim().split('\n');
         const meses = [];
-        const datasetsMap = {};
+        const fundoML = [];
+        const feriasML = [];
 
-        // Inicializar datasets
-        headers.slice(1).forEach(h => datasetsMap[h] = []);
-
-        // Preencher dados, ignorando linhas vazias ou incompletas
         linhas.slice(1).forEach(linha => {
-          const cols = linha.split(",");
-          if (cols.length < headers.length) return; // ignora linhas incompletas
+          const cols = linha.split(',');
           meses.push(cols[0]);
-          cols.slice(1).forEach((v, i) => {
-            const key = headers[i+1];
-            if (!datasetsMap[key]) datasetsMap[key] = [];
-            const num = parseFloat(v.replace("€","").replace(/\s/g,"").replace(",", ".")) || 0;
-            datasetsMap[key].push(num);
-          });
+          fundoML.push(parseFloat(cols[1]?.replace(/\s|€/g, '') || 0));
+          feriasML.push(parseFloat(cols[2]?.replace(/\s|€/g, '') || 0));
         });
 
-        const datasets = Object.keys(datasetsMap).map(col => ({
-          label: col,
-          data: datasetsMap[col],
-          borderColor: getRandomColor(),
-          backgroundColor: "rgba(0,0,0,0.05)",
-          tension: 0.3
-        }));
-
-        createChart(meses, datasets);
+        const ctx = document.getElementById('myChart').getContext('2d');
+        new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: meses,
+            datasets: [
+              { label: 'Fundo ML', data: fundoML, backgroundColor: 'rgba(255,99,132,0.7)' },
+              { label: 'Férias ML', data: feriasML, backgroundColor: 'rgba(54,162,235,0.7)' }
+            ]
+          },
+          options: {
+            responsive: true,
+            plugins: { legend: { position: 'top' }, title: { display: true, text: 'Investimentos Mensais 2025' } },
+            scales: { y: { beginAtZero: true } },
+            interaction: { mode: 'index', intersect: false },
+            stacked: true
+          }
+        });
       })
-      .catch(err => console.error("Erro ao carregar CSV:", err));
+      .catch(err => console.error('Erro ao carregar CSV:', err));
   </script>
 </body>
 </html>
