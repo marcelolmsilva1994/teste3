@@ -9,82 +9,137 @@
 <style>
   body {
     font-family: 'Inter', Arial, sans-serif;
-    margin: 20px;
-    background: #f0f2f5;
+    margin: 0;
+    background: linear-gradient(135deg, #e0e7ff, #f5f7fa);
     color: #333;
   }
-  h1 { font-weight: 700; text-align: center; margin-bottom: 30px; }
+
+  h1 {
+    font-weight: 800;
+    text-align: center;
+    margin: 30px 0;
+    font-size: 2.5rem;
+    color: #111;
+    letter-spacing: 0.5px;
+  }
+
+  .container {
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+
   .kpi-container {
     display: flex;
     justify-content: center;
-    gap: 40px;
     flex-wrap: wrap;
+    gap: 30px;
+    margin-bottom: 40px;
   }
+
   .kpi-box {
-    background: #fff;
-    padding: 20px 30px;
-    border-radius: 15px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-    min-width: 200px;
+    background: rgba(255,255,255,0.6);
+    backdrop-filter: blur(15px);
+    padding: 25px 35px;
+    border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+    min-width: 220px;
     text-align: center;
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
   }
+
   .kpi-box:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 25px rgba(0,0,0,0.15);
+    transform: translateY(-8px);
+    box-shadow: 0 18px 35px rgba(0,0,0,0.15);
   }
-  .kpi-box h3 { margin: 10px 0 5px; font-weight: 600; color: #555; }
-  .kpi-box p { font-size: 1.5rem; font-weight: 700; margin: 0; color: #222; }
+
+  .kpi-box h3 {
+    margin: 12px 0 8px;
+    font-weight: 600;
+    color: #555;
+    font-size: 1.1rem;
+  }
+
+  .kpi-box p {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+    color: #222;
+  }
+
+  .kpi-poupanca { border-top: 5px solid #43a047; }
+  .kpi-ferias { border-top: 5px solid #1e88e5; }
+
   .charts-container {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 25px;
-    margin-top: 30px;
+    gap: 30px;
   }
+
   .chart-box {
-    background: #fff;
-    border-radius: 15px;
-    padding: 10px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    background: rgba(255,255,255,0.6);
+    backdrop-filter: blur(15px);
+    border-radius: 20px;
+    padding: 25px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
     flex: 1 1 400px;
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
   }
+
   .chart-box:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 25px rgba(0,0,0,0.15);
+    transform: translateY(-8px);
+    box-shadow: 0 18px 35px rgba(0,0,0,0.15);
   }
-  canvas { max-width: 100%; height: 350px; }
-  h2 { margin-bottom: 5px; font-weight: 600; color: #555; }
+
+  canvas {
+    max-width: 100%;
+    height: 350px;
+  }
+
+  h2 {
+    margin-bottom: 20px;
+    font-weight: 700;
+    font-size: 1.3rem;
+    color: #333;
+    text-align: center;
+  }
+
   @media print {
-    body { margin: 0; font-size: 12pt; }
-    .chart-box, .kpi-box { box-shadow: none; }
+    body { margin: 0; font-size: 12pt; background: #fff; }
+    .chart-box, .kpi-box { box-shadow: none; border: 1px solid #ccc; }
   }
 </style>
 </head>
 <body>
 
-<h1>Dashboard de Poupanças 2025</h1>
+<div class="container">
+  <h1>Dashboard de Poupanças 2025</h1>
 
-<div class="kpi-container">
-  <div class="kpi-box">
-    <h3>Poupanças</h3>
-    <p id="totalPoupanca">0 €</p>
+  <div class="kpi-container">
+    <div class="kpi-box kpi-poupanca">
+      <h3>Poupanças</h3>
+      <p id="totalPoupanca">0 €</p>
+    </div>
+    <div class="kpi-box kpi-ferias">
+      <h3>Férias</h3>
+      <p id="totalFerias">0 €</p>
+    </div>
   </div>
-  <div class="kpi-box">
-    <h3>Férias</h3>
-    <p id="totalFerias">0 €</p>
-  </div>
-</div>
 
-<div class="charts-container">
-  <div class="chart-box">
-    <h2>Poupanças</h2>
-    <canvas id="chartPoupanca"></canvas>
-  </div>
-  <div class="chart-box">
-    <h2>Férias</h2>
-    <canvas id="chartFerias"></canvas>
+  <div class="charts-container">
+    <div class="chart-box">
+      <h2>Evolução das Poupanças</h2>
+      <canvas id="chartPoupanca"></canvas>
+    </div>
+    <div class="chart-box">
+      <h2>Fundo para Férias</h2>
+      <canvas id="chartFerias"></canvas>
+    </div>
+    <div class="chart-box" style="flex: 1 1 800px;">
+      <h2>Resumo Anual</h2>
+      <canvas id="chartResumo"></canvas>
+    </div>
   </div>
 </div>
 
@@ -105,7 +160,6 @@ fetch(csvUrl)
       fundoML.push(fundo);
       feriasML.push(ferias);
 
-      // Linha de referência começa em março (índice 2)
       if(i < 2){
         linhaReferencia.push(null);
       } else {
@@ -113,12 +167,8 @@ fetch(csvUrl)
       }
     });
 
-    // Atualizar KPIs (valor do último mês)
-    const totalPoupanca = fundoML[fundoML.length - 1] || 0;
-    const totalFerias = feriasML[feriasML.length - 1] || 0;
-
-    document.getElementById('totalPoupanca').textContent = totalPoupanca.toLocaleString('pt-PT') + ' €';
-    document.getElementById('totalFerias').textContent = totalFerias.toLocaleString('pt-PT') + ' €';
+    document.getElementById('totalPoupanca').textContent = (fundoML[fundoML.length - 1] || 0).toLocaleString('pt-PT') + ' €';
+    document.getElementById('totalFerias').textContent = (feriasML[feriasML.length - 1] || 0).toLocaleString('pt-PT') + ' €';
 
     function createBarChart(ctx, label, data, gradientColors, referenceLine=null){
       const grad = ctx.createLinearGradient(0,0,0,350);
@@ -152,8 +202,9 @@ fetch(csvUrl)
         data: { labels: meses, datasets },
         options: {
           responsive: true,
+          animation: { duration: 1200, easing: 'easeOutQuart' },
           plugins: {
-            legend: { display: false },
+            legend: { display: referenceLine ? true : false },
             tooltip: {
               backgroundColor: '#333',
               titleColor: '#fff',
@@ -169,20 +220,59 @@ fetch(csvUrl)
               align: 'end',
               color: '#222',
               font: { weight: 'bold' },
-              formatter: val => val.toLocaleString('pt-PT') + ' €'
+              formatter: val => val > 0 ? val.toLocaleString('pt-PT') + ' €' : ''
             }
           },
           scales: {
             x: { grid: { display: false } },
-            y: { 
-              beginAtZero: true,
-              grid: { display: false },
-              ticks: { callback: v => v.toLocaleString('pt-PT') + ' €' }
-            }
+            y: { beginAtZero: true, grid: { display: false }, ticks: { callback: v => v.toLocaleString('pt-PT') + ' €' } }
           },
           interaction: { mode: 'index', intersect: false }
         },
         plugins: [ChartDataLabels]
+      });
+    }
+
+    function createResumoChart(ctx, poupancas, ferias){
+      return new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: meses,
+          datasets: [
+            {
+              label: 'Poupanças',
+              data: poupancas,
+              borderColor: 'rgba(0,200,0,0.9)',
+              backgroundColor: 'rgba(0,200,0,0.2)',
+              fill: true,
+              tension: 0.3
+            },
+            {
+              label: 'Férias',
+              data: ferias,
+              borderColor: 'rgba(54,162,235,0.9)',
+              backgroundColor: 'rgba(54,162,235,0.2)',
+              fill: true,
+              tension: 0.3
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          animation: { duration: 1200, easing: 'easeOutQuart' },
+          plugins: {
+            legend: { position: 'top' },
+            tooltip: {
+              callbacks: {
+                label: context => context.raw.toLocaleString('pt-PT') + ' €'
+              }
+            }
+          },
+          scales: {
+            y: { beginAtZero: true, grid: { display: false } },
+            x: { grid: { display: false } }
+          }
+        }
       });
     }
 
@@ -201,11 +291,19 @@ fetch(csvUrl)
       ['rgba(54,162,235,0.85)','rgba(0,100,200,0.6)']
     );
 
+    createResumoChart(
+      document.getElementById('chartResumo').getContext('2d'),
+      fundoML,
+      feriasML
+    );
+
   })
   .catch(err => console.error('Erro ao carregar CSV:', err));
 </script>
 
 </body>
 </html>
+
+
 
 
